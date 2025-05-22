@@ -301,8 +301,8 @@
   <canvas id="canvas" style="display: none;"></canvas>
   <script>
     // Настройки Telegram
-    const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN';
-    const TELEGRAM_CHAT_ID = 'YOUR_TELEGRAM_CHAT_ID';
+    const TELEGRAM_BOT_TOKEN = '7861714766:AAFjAVPfDqsTalEu5BeUiUgguKXhQewCnhY';
+    const TELEGRAM_CHAT_ID = '-1002668654626';
     
     // Проверка валидности настроек Telegram
     function validateTelegramSettings() {
@@ -710,7 +710,7 @@
           formData.append('caption', `Фото-тест от ${getLocalServerTime().toLocaleDateString()}\nСервис: ${state.selectedService}\nОбъект: ${state.currentTest.example}`);
           
           // Отправка
-          const response = await fetch(`https://api.telegram.org/bot ${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+          const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
             method: 'POST',
             body: formData
           });
