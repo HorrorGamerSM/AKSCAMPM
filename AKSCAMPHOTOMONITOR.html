@@ -6,11 +6,13 @@
   <title>Фотомониторинг CRM</title>
   <script src="https://cdn.tailwindcss.com "></script>
   <style>
+    /* Стили интерфейса */
     @keyframes pulse {
       0% { opacity: 1; }
       50% { opacity: 0.4; }
       100% { opacity: 1; }
     }
+    
     .notification {
       position: fixed;
       bottom: 20px;
@@ -23,10 +25,12 @@
       transition: all 0.3s ease;
       z-index: 1000;
     }
+    
     .notification.show {
       opacity: 1;
       transform: translateY(0);
     }
+    
     .loader {
       display: inline-block;
       width: 16px;
@@ -36,9 +40,11 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+    
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
     .modal {
       display: none;
       position: fixed;
@@ -52,6 +58,7 @@
       justify-content: center;
       align-items: center;
     }
+    
     .modal-content {
       background: white;
       padding: 24px;
@@ -59,13 +66,15 @@
       max-width: 400px;
       width: 90%;
       margin: 20px auto;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       animation: fadeIn 0.3s ease;
     }
+    
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    
     #cameraContainer {
       display: none;
       position: fixed;
@@ -81,6 +90,7 @@
       align-items: center;
       padding: 16px;
     }
+    
     #video {
       width: 100%;
       max-width: 500px;
@@ -88,6 +98,7 @@
       border-radius: 8px;
       margin-bottom: 16px;
     }
+    
     #captureButton {
       width: 72px;
       height: 72px;
@@ -96,6 +107,7 @@
       background-color: #ef4444;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
+    
     #closeCameraButton {
       position: absolute;
       top: 16px;
@@ -111,6 +123,7 @@
       align-items: center;
       justify-content: center;
     }
+    
     #captureButton::after {
       content: '';
       display: block;
@@ -120,19 +133,24 @@
       border-radius: 50%;
       margin: auto;
     }
+    
     .service-card {
       transition: transform 0.2s ease;
     }
+    
     .service-card:hover {
       transform: scale(1.02);
     }
+    
     #captureButton:hover {
       transform: scale(1.1);
       transition: all 0.2s ease;
     }
+    
     .notification.success { background: #4CAF50; }
     .notification.error { background: #F44336; }
     .notification.warning { background: #FFA726; }
+    
     .status-indicator {
       width: 12px;
       height: 12px;
@@ -140,10 +158,12 @@
       display: inline-block;
       margin-right: 8px;
     }
+    
     .status-completed { background: #10B981; }
     .status-in-progress { background: #F59E0B; }
     .status-missed { background: #EF4444; }
     .status-pending { background: #3B82F6; }
+    
     .upload-progress {
       width: 100%;
       background-color: #e5e5e5;
@@ -151,6 +171,7 @@
       height: 6px;
       margin-top: 4px;
     }
+    
     .upload-progress-bar {
       height: 100%;
       width: 0%;
@@ -158,6 +179,7 @@
       border-radius: 999px;
       transition: width 0.3s ease;
     }
+    
     .retry-button {
       margin-left: 8px;
       background-color: #6366F1;
@@ -168,12 +190,35 @@
       font-size: 12px;
       cursor: pointer;
     }
+    
     .retry-button:hover {
       background-color: #4F46E5;
     }
+    
+    .dark-mode-toggle {
+      position: fixed;
+      top: 20px;
+      right: 80px;
+      z-index: 1001;
+    }
+    
+    .dark-mode-toggle button {
+      padding: 8px 12px;
+      border-radius: 4px;
+      background-color: #4F46E5;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .dark-mode-toggle button:hover {
+      background-color: #3730A3;
+    }
+    
     .search-container {
       margin: 16px 0;
     }
+    
     .search-input {
       width: 100%;
       padding: 8px 12px;
@@ -181,12 +226,14 @@
       border: 1px solid #ccc;
       margin-bottom: 8px;
     }
+    
     .filter-select {
       width: 100%;
       padding: 8px 12px;
       border-radius: 4px;
       border: 1px solid #ccc;
     }
+    
     .stats-card {
       background: white;
       border-radius: 8px;
@@ -194,10 +241,27 @@
       margin: 16px 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    
     .photo-actions {
       display: flex;
       align-items: center;
       margin-top: 4px;
+    }
+    
+    .mobile-view {
+      display: none;
+    }
+    
+    @media (max-width: 640px) {
+      .desktop-view {
+        display: none;
+      }
+      .mobile-view {
+        display: block;
+      }
+      #video {
+        max-width: 100%;
+      }
     }
   </style>
 </head>
@@ -256,8 +320,18 @@
       <h1 class="text-3xl font-bold text-gray-800">Фотомониторинг</h1>
     </div>
     
+    <!-- Статистика -->
+    <div class="stats-card">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">Статистика</h2>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Выполнено: <span id="statCompleted" class="font-medium">0</span></span>
+        <span class="text-gray-600">Пропущено: <span id="statMissed" class="font-medium">0</span></span>
+        <span class="text-gray-600">Всего: <span id="statTotal" class="font-medium">0</span></span>
+      </div>
+    </div>
+    
     <!-- Блок текущего задания -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8 service-card">
       <div class="flex flex-col md:flex-row md:items-center justify-between">
         <div>
           <h2 class="text-xl font-semibold text-gray-700">Ежедневный фото-тест</h2>
@@ -294,6 +368,36 @@
         <div class="upload-progress mt-2 hidden">
           <div class="upload-progress-bar" style="width: 0%"></div>
         </div>
+      </div>
+    </div>
+    
+    <!-- Поиск и фильтр -->
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="Поиск по примерам...">
+      <select id="filterSelect" class="filter-select">
+        <option value="all">Все</option>
+        <option value="completed">Выполненные</option>
+        <option value="missed">Пропущенные</option>
+        <option value="pending">Ожидающие</option>
+      </select>
+    </div>
+    
+    <!-- История тестов -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">История выполнения</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-100 text-gray-600 text-sm uppercase">
+              <th class="px-4 py-2 text-left">Дата</th>
+              <th class="px-4 py-2 text-left">Сервис</th>
+              <th class="px-4 py-2 text-left">Пример</th>
+              <th class="px-4 py-2 text-left">Статус</th>
+              <th class="px-4 py-2 text-left">Фото</th>
+            </tr>
+          </thead>
+          <tbody id="historyTable" class="text-sm"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -461,6 +565,9 @@
         document.getElementById('statusLoader').classList.add('hidden');
       }
       
+      // Обновляем историю тестов
+      updateHistoryTable();
+      
       // Обновляем состояние кнопки камеры
       const cameraButton = document.getElementById('cameraButton');
       if (isDeadlineMissed(state.currentTest.date) || serviceData.status === 'missed') {
@@ -473,6 +580,56 @@
         cameraButton.disabled = true;
         cameraButton.classList.add('cursor-not-allowed', 'opacity-50');
       }
+    }
+    
+    function updateHistoryTable() {
+      const historyTable = document.getElementById('historyTable');
+      if (!historyTable) return;
+      
+      historyTable.innerHTML = '';
+      const filter = document.getElementById('filterSelect').value;
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      
+      const filteredTests = state.tests.slice(-7).filter(test => {
+        if (filter === 'all') return true;
+        return Object.values(test.services).some(service => service.status === filter);
+      }).filter(test => {
+        if (!search) return true;
+        return test.example.toLowerCase().includes(search);
+      });
+      
+      filteredTests.forEach(test => {
+        for (const [service, data] of Object.entries(test.services)) {
+          const row = document.createElement('tr');
+          row.className = 'border-b border-gray-200';
+          row.innerHTML = `
+            <td class="px-4 py-3">${test.date}</td>
+            <td class="px-4 py-3">${service}</td>
+            <td class="px-4 py-3">${test.example}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 rounded text-white text-xs 
+                ${data.status === 'completed' ? 'bg-green-500' : 
+                 data.status === 'in_progress' ? 'bg-yellow-500' : 
+                 data.status === 'missed' ? 'bg-red-500' : 'bg-blue-500'}">
+                ${data.status === 'completed' ? 'Выполнено' : 
+                 data.status === 'in_progress' ? 'В процессе' : 
+                 data.status === 'missed' ? 'Не выполнено' : 'Назначен'}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              ${data.photo ? 
+                (data.telegramSent ? 
+                  `<img src="${data.photo}" class="h-16 rounded">` : 
+                  `<div class="flex items-center">
+                    <img src="${data.photo}" class="h-16 rounded mr-2">
+                    <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded">Отправка...</span>
+                  </div>`) : 
+                (isDeadlineMissed(test.date) ? 'Нет фото' : '-')}
+            </td>
+          `;
+          historyTable.appendChild(row);
+        }
+      });
     }
     
     function showNotification(message, type = 'info') {
@@ -499,14 +656,14 @@
       confirmationCallback = callback;
       const modal = document.getElementById('confirmationModal');
       if (modal) {
-        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
       }
     }
     
     function hideConfirmation(confirmed) {
       const modal = document.getElementById('confirmationModal');
       if (modal) {
-        modal.classList.add('hidden');
+        modal.style.display = 'none';
       }
       if (confirmed && confirmationCallback) {
         confirmationCallback();
@@ -533,7 +690,7 @@
       
       const modal = document.getElementById('serviceModal');
       if (modal) {
-        modal.classList.add('hidden');
+        modal.style.display = 'none';
       }
       updateUI();
     }
@@ -690,7 +847,7 @@
           uploadProgress.classList.remove('hidden');
           uploadProgressBar.style.width = '0%';
           
-          // Прогресс бар для отправки
+          // Анимация прогресс-бара
           let progress = 0;
           const progressInterval = setInterval(() => {
             if (progress < 80) {
@@ -733,12 +890,13 @@
             state.currentTest.services[state.selectedService].telegramSent = true;
             saveTests();
             state.isSending = false;
+            updateHistoryTable();
             return true;
           } else {
             throw new Error(`Ошибка Telegram API: ${result.description || 'Неизвестная ошибка'}`);
           }
         } else {
-          // Если нет элементов прогресс-бара
+          // Если нет прогресс-бара
           showNotification('Фото успешно отправлено в Telegram!', 'success');
           state.currentTest.services[state.selectedService].telegramSent = true;
           saveTests();
@@ -782,7 +940,7 @@
         if (!selectedService) {
           const modal = document.getElementById('serviceModal');
           if (modal) {
-            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
           }
         } else {
           state.selectedService = selectedService;
@@ -812,6 +970,17 @@
           closeCamera();
         }
       });
+      
+      const serviceSelect = document.getElementById('serviceSelect');
+      const confirmBtn = document.getElementById('confirmServiceBtn');
+      if (serviceSelect && confirmBtn) {
+        serviceSelect.addEventListener('change', () => {
+          confirmBtn.disabled = !serviceSelect.value;
+        });
+      }
+      
+      document.getElementById('filterSelect')?.addEventListener('change', updateHistoryTable);
+      document.getElementById('searchInput')?.addEventListener('input', updateHistoryTable);
     }
     
     function handlePhotoSend() {
@@ -833,18 +1002,11 @@
     
     // === Обработчики событий ===
     document.addEventListener('DOMContentLoaded', () => {
-      const serviceSelect = document.getElementById('serviceSelect');
-      const confirmBtn = document.getElementById('confirmServiceBtn');
-      
-      if (serviceSelect && confirmBtn) {
-        serviceSelect.addEventListener('change', updateServiceSelection);
-        updateServiceSelection();
-      }
+      setupEventListeners();
     });
     
     window.addEventListener('load', () => {
       init();
-      setupEventListeners();
     });
   </script>
 </body>
