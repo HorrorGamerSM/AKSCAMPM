@@ -6,13 +6,11 @@
   <title>Фотомониторинг CRM</title>
   <script src="https://cdn.tailwindcss.com "></script>
   <style>
-    /* Стили интерфейса */
     @keyframes pulse {
       0% { opacity: 1; }
       50% { opacity: 0.4; }
       100% { opacity: 1; }
     }
-    
     .notification {
       position: fixed;
       bottom: 20px;
@@ -25,12 +23,10 @@
       transition: all 0.3s ease;
       z-index: 1000;
     }
-    
     .notification.show {
       opacity: 1;
       transform: translateY(0);
     }
-    
     .loader {
       display: inline-block;
       width: 16px;
@@ -40,11 +36,9 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    
     .modal {
       display: none;
       position: fixed;
@@ -58,7 +52,6 @@
       justify-content: center;
       align-items: center;
     }
-    
     .modal-content {
       background: white;
       padding: 24px;
@@ -69,12 +62,10 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       animation: fadeIn 0.3s ease;
     }
-    
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    
     #cameraContainer {
       display: none;
       position: fixed;
@@ -90,7 +81,6 @@
       align-items: center;
       padding: 16px;
     }
-    
     #video {
       width: 100%;
       max-width: 500px;
@@ -98,7 +88,6 @@
       border-radius: 8px;
       margin-bottom: 16px;
     }
-    
     #captureButton {
       width: 72px;
       height: 72px;
@@ -107,7 +96,6 @@
       background-color: #ef4444;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
-    
     #closeCameraButton {
       position: absolute;
       top: 16px;
@@ -123,7 +111,6 @@
       align-items: center;
       justify-content: center;
     }
-    
     #captureButton::after {
       content: '';
       display: block;
@@ -133,24 +120,19 @@
       border-radius: 50%;
       margin: auto;
     }
-    
     .service-card {
       transition: transform 0.2s ease;
     }
-    
     .service-card:hover {
       transform: scale(1.02);
     }
-    
     #captureButton:hover {
       transform: scale(1.1);
       transition: all 0.2s ease;
     }
-    
     .notification.success { background: #4CAF50; }
     .notification.error { background: #F44336; }
     .notification.warning { background: #FFA726; }
-    
     .status-indicator {
       width: 12px;
       height: 12px;
@@ -158,12 +140,10 @@
       display: inline-block;
       margin-right: 8px;
     }
-    
     .status-completed { background: #10B981; }
     .status-in-progress { background: #F59E0B; }
     .status-missed { background: #EF4444; }
     .status-pending { background: #3B82F6; }
-    
     .upload-progress {
       width: 100%;
       background-color: #e5e5e5;
@@ -171,7 +151,6 @@
       height: 6px;
       margin-top: 4px;
     }
-    
     .upload-progress-bar {
       height: 100%;
       width: 0%;
@@ -179,7 +158,6 @@
       border-radius: 999px;
       transition: width 0.3s ease;
     }
-    
     .retry-button {
       margin-left: 8px;
       background-color: #6366F1;
@@ -190,18 +168,15 @@
       font-size: 12px;
       cursor: pointer;
     }
-    
     .retry-button:hover {
       background-color: #4F46E5;
     }
-    
     .dark-mode-toggle {
       position: fixed;
       top: 20px;
       right: 80px;
       z-index: 1001;
     }
-    
     .dark-mode-toggle button {
       padding: 8px 12px;
       border-radius: 4px;
@@ -210,15 +185,12 @@
       border: none;
       cursor: pointer;
     }
-    
     .dark-mode-toggle button:hover {
       background-color: #3730A3;
     }
-    
     .search-container {
       margin: 16px 0;
     }
-    
     .search-input {
       width: 100%;
       padding: 8px 12px;
@@ -226,14 +198,12 @@
       border: 1px solid #ccc;
       margin-bottom: 8px;
     }
-    
     .filter-select {
       width: 100%;
       padding: 8px 12px;
       border-radius: 4px;
       border: 1px solid #ccc;
     }
-    
     .stats-card {
       background: white;
       border-radius: 8px;
@@ -241,17 +211,14 @@
       margin: 16px 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    
     .photo-actions {
       display: flex;
       align-items: center;
       margin-top: 4px;
     }
-    
     .mobile-view {
       display: none;
     }
-    
     @media (max-width: 640px) {
       .desktop-view {
         display: none;
@@ -266,6 +233,11 @@
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+  <!-- Темная тема -->
+  <div class="dark-mode-toggle hidden">
+    <button onclick="toggleDarkMode()">Переключить тему</button>
+  </div>
+  
   <!-- Уведомления -->
   <div id="notification" class="notification bg-green-500 text-white"></div>
   
@@ -405,8 +377,8 @@
   <canvas id="canvas" style="display: none;"></canvas>
   <script>
     // Настройки Telegram
-    const TELEGRAM_BOT_TOKEN = '7861714766:AAFjAVPfDqsTalEu5BeUiUgguKXhQewCnhY';
-    const TELEGRAM_CHAT_ID = '-1002668654626';
+    const TELEGRAM_BOT_TOKEN = '7861714766:AAFjAVPfDqsTalEu5BeUiUgguKXhQewCnhY'; // ЗАМЕНИТЬ НА СВОЙ!
+    const TELEGRAM_CHAT_ID = '-1002668654626';     // ЗАМЕНИТЬ НА СВОЙ!
     
     // Проверка валидности настроек Telegram
     function validateTelegramSettings() {
@@ -820,6 +792,29 @@
       document.getElementById('statTotal').textContent = stats.total;
     }
     
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+      document.body.classList.toggle('bg-gray-900');
+      document.body.classList.toggle('text-gray-100');
+      document.body.querySelectorAll('.bg-white').forEach(el => {
+        el.classList.toggle('bg-gray-800');
+      });
+      document.body.querySelectorAll('.bg-blue-500').forEach(el => {
+        el.classList.toggle('bg-blue-700');
+      });
+      document.body.querySelectorAll('.bg-green-500').forEach(el => {
+        el.classList.toggle('bg-green-700');
+      });
+      document.body.querySelectorAll('.bg-yellow-500').forEach(el => {
+        el.classList.toggle('bg-yellow-700');
+      });
+      document.body.querySelectorAll('.bg-red-500').forEach(el => {
+        el.classList.toggle('bg-red-700');
+      });
+      state.darkMode = !state.darkMode;
+      localStorage.setItem('darkMode', state.darkMode ? 'enabled' : 'disabled');
+    }
+    
     // === Функции отправки в Telegram ===
     async function sendToTelegram(photoData) {
       try {
@@ -847,7 +842,7 @@
           uploadProgress.classList.remove('hidden');
           uploadProgressBar.style.width = '0%';
           
-          // Анимация прогресс-бара
+          // Прогресс бар для отправки
           let progress = 0;
           const progressInterval = setInterval(() => {
             if (progress < 80) {
@@ -971,14 +966,7 @@
         }
       });
       
-      const serviceSelect = document.getElementById('serviceSelect');
-      const confirmBtn = document.getElementById('confirmServiceBtn');
-      if (serviceSelect && confirmBtn) {
-        serviceSelect.addEventListener('change', () => {
-          confirmBtn.disabled = !serviceSelect.value;
-        });
-      }
-      
+      document.getElementById('serviceSelect')?.addEventListener('change', updateServiceSelection);
       document.getElementById('filterSelect')?.addEventListener('change', updateHistoryTable);
       document.getElementById('searchInput')?.addEventListener('input', updateHistoryTable);
     }
@@ -1002,11 +990,18 @@
     
     // === Обработчики событий ===
     document.addEventListener('DOMContentLoaded', () => {
-      setupEventListeners();
+      const serviceSelect = document.getElementById('serviceSelect');
+      const confirmBtn = document.getElementById('confirmServiceBtn');
+      
+      if (serviceSelect && confirmBtn) {
+        serviceSelect.addEventListener('change', updateServiceSelection);
+        updateServiceSelection();
+      }
     });
     
     window.addEventListener('load', () => {
       init();
+      setupEventListeners();
     });
   </script>
 </body>
