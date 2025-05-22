@@ -66,6 +66,139 @@
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    #cameraContainer {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: black;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+    }
+    #video {
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    #captureButton {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 4px solid white;
+      background-color: #ef4444;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    #closeCameraButton {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid white;
+      background-color: rgba(255, 255, 200, 0.2);
+      color: white;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #captureButton::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 40px;
+      border: 2px solid white;
+      border-radius: 50%;
+      margin: auto;
+    }
+    .service-card {
+      transition: transform 0.2s ease;
+    }
+    .service-card:hover {
+      transform: scale(1.02);
+    }
+    #captureButton:hover {
+      transform: scale(1.1);
+      transition: all 0.2s ease;
+    }
+    .notification.success { background: #4CAF50; }
+    .notification.error { background: #F44336; }
+    .notification.warning { background: #FFA726; }
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    .status-completed { background: #10B981; }
+    .status-in-progress { background: #F59E0B; }
+    .status-missed { background: #EF4444; }
+    .status-pending { background: #3B82F6; }
+    .upload-progress {
+      width: 100%;
+      background-color: #e5e5e5;
+      border-radius: 999px;
+      height: 6px;
+      margin-top: 4px;
+    }
+    .upload-progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #3B82F6;
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .retry-button {
+      margin-left: 8px;
+      background-color: #6366F1;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .retry-button:hover {
+      background-color: #4F46E5;
+    }
+    .search-container {
+      margin: 16px 0;
+    }
+    .search-input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-bottom: 8px;
+    }
+    .filter-select {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .stats-card {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .photo-actions {
+      display: flex;
+      align-items: center;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -108,9 +241,20 @@
     </div>
   </div>
   
+  <!-- Контейнер камеры -->
+  <div id="cameraContainer">
+    <div class="flex justify-end w-full">
+      <button id="closeCameraButton" onclick="closeCamera()">×</button>
+    </div>
+    <video id="video" autoplay></video>
+    <button id="captureButton" onclick="capturePhoto()"></button>
+  </div>
+  
   <!-- Основной контент -->
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8 text-gray-800">Фотомониторинг</h1>
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Фотомониторинг</h1>
+    </div>
     
     <!-- Блок текущего задания -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -126,51 +270,49 @@
         </div>
       </div>
       
-      <!-- Форма загрузки фото -->
+      <!-- Кнопка для запуска камеры -->
       <div class="mt-6">
-        <label class="block text-gray-700 mb-2">Загрузите фото:</label>
-        <input type="file" accept="image/*" onchange="handlePhotoUpload(event)" 
-               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0 file:text-sm file:font-semibold
-                      file:bg-blue-500 file:text-white hover:file:bg-blue-600"
-               id="photoInput">
+        <label class="block text-gray-700 mb-2">Сделайте фото:</label>
+        <button onclick="openCamera()" 
+                class="block w-full text-sm text-gray-500 py-2 px-4 rounded-full bg-blue-500 text-white hover:bg-blue-600"
+                id="cameraButton" disabled>
+          Открыть камеру
+        </button>
         <div id="photoPreview" class="mt-4 hidden">
           <img id="previewImage" class="max-h-64 rounded-lg shadow">
+          <div class="photo-actions">
+            <button onclick="retakePhoto()" class="text-sm text-blue-500 hover:text-blue-700">Сделать заново</button>
+          </div>
         </div>
         <div id="uploadStatus" class="mt-2 text-sm text-gray-600 flex items-center">
           <span id="statusText"></span>
           <span id="statusLoader" class="hidden ml-2">
             <div class="loader"></div>
           </span>
+          <button id="retryButton" class="retry-button hidden" onclick="handlePhotoSend()">Повторить</button>
+        </div>
+        <div class="upload-progress mt-2 hidden">
+          <div class="upload-progress-bar" style="width: 0%"></div>
         </div>
       </div>
     </div>
-    
-    <!-- История тестов -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">История выполнения</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="bg-gray-100 text-gray-600 text-sm uppercase">
-              <th class="px-4 py-2 text-left">Дата</th>
-              <th class="px-4 py-2 text-left">Сервис</th>
-              <th class="px-4 py-2 text-left">Пример</th>
-              <th class="px-4 py-2 text-left">Статус</th>
-              <th class="px-4 py-2 text-left">Фото</th>
-            </tr>
-          </thead>
-          <tbody id="historyTable" class="text-sm"></tbody>
-        </table>
-      </div>
-    </div>
   </div>
-
+  
+  <canvas id="canvas" style="display: none;"></canvas>
   <script>
     // Настройки Telegram
-    const TELEGRAM_BOT_TOKEN = '7861714766:AAFjAVPfDqsTalEu5BeUiUgguKXhQewCnhY'; // ЗАМЕНИТЬ НА СВОЙ!
-    const TELEGRAM_CHAT_ID = '-1002668654626';     // ЗАМЕНИТЬ НА СВОЙ!
-
+    const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN';
+    const TELEGRAM_CHAT_ID = 'YOUR_TELEGRAM_CHAT_ID';
+    
+    // Проверка валидности настроек Telegram
+    function validateTelegramSettings() {
+      if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || 
+          TELEGRAM_BOT_TOKEN.includes('YOUR') || TELEGRAM_CHAT_ID.includes('YOUR')) {
+        return false;
+      }
+      return true;
+    }
+    
     // Примеры тестов
     const testExamples = [
       "Куллер в клиентской зоне",
@@ -190,196 +332,189 @@
       "Сервис в ночное время (входная группа)",
       "Демонстрация гидрогелевой защиты"
     ];
-
-    // Инициализация данных
-    if (!localStorage.getItem('photoTests')) {
-      localStorage.setItem('photoTests', JSON.stringify([]));
+    
+    // Состояние приложения
+    let state = {
+      currentTest: null,
+      selectedService: null,
+      mediaStream: null,
+      tests: [],
+      photoDataURL: null,
+      isSending: false
+    };
+    
+    // Переменная для хранения callback функции подтверждения
+    let confirmationCallback = null;
+    
+    // === Функции работы с локальным временем ===
+    function getLocalServerTime() {
+      return new Date();
     }
-
+    
+    function adjustDateWithTime(date, hours = 0, minutes = 0, seconds = 0) {
+      date.setHours(hours, minutes, seconds, 0);
+      return date;
+    }
+    
+    function isDeadlineMissed(date = null) {
+      const now = getLocalServerTime();
+      const deadline = adjustDateWithTime(new Date(now), 21, 0, 0);
+      if (date) {
+        const testDate = new Date(date);
+        const compareDate = adjustDateWithTime(testDate, 21, 0, 0);
+        return now > compareDate;
+      }
+      return now > deadline;
+    }
+    
+    // === Функции работы с данными ===
+    function loadTests() {
+      try {
+        const storedTests = localStorage.getItem('photoTests');
+        return storedTests ? JSON.parse(storedTests) : [];
+      } catch (e) {
+        console.error('Ошибка загрузки тестов:', e);
+        return [];
+      }
+    }
+    
+    function saveTests() {
+      try {
+        localStorage.setItem('photoTests', JSON.stringify(state.tests));
+      } catch (e) {
+        console.error('Ошибка сохранения тестов:', e);
+      }
+    }
+    
     function getCurrentTest() {
-      const now = new Date();
+      const now = getLocalServerTime();
       const targetHour = 5;
       if (now.getHours() < targetHour) now.setDate(now.getDate() - 1);
       const today = now.toISOString().split('T')[0];
-      let tests = JSON.parse(localStorage.getItem('photoTests'));
-      let currentTest = tests.find(t => t.date === today);
+      let currentTest = state.tests.find(t => t.date === today);
       
       if (!currentTest) {
         currentTest = {
           date: today,
           example: testExamples[Math.floor(Math.random() * testExamples.length)],
-          service: null,
-          status: 'pending',
-          photo: null,
-          telegramSent: false,
+          services: {
+            "Сервис 1": { status: "pending", photo: null, telegramSent: false },
+            "Сервис 2": { status: "pending", photo: null, telegramSent: false },
+            "Сервис 3": { status: "pending", photo: null, telegramSent: false }
+          },
           missedNotificationSent: false
         };
-        tests.push(currentTest);
-        localStorage.setItem('photoTests', JSON.stringify(tests));
+        state.tests.push(currentTest);
+        saveTests();
       }
-      
       return currentTest;
     }
-
-    function isDeadlineMissed(date = null) {
-      const now = new Date();
-      const deadline = new Date();
-      deadline.setHours(21, 0, 0, 0);
-      
-      if (date) {
-        const testDate = new Date(date);
-        const compareDate = new Date(testDate);
-        compareDate.setHours(21, 0, 0, 0);
-        return now > compareDate;
+    
+    // === Функции интерфейса ===
+    function updateUI() {
+      if (!state.selectedService) {
+        document.getElementById('testService').textContent = 'Сервис не выбран';
+        document.getElementById('cameraButton').disabled = true;
+        document.getElementById('cameraButton').classList.add('cursor-not-allowed', 'opacity-50');
+        return;
       }
       
-      return now > deadline;
-    }
-
-    function dataURLtoBlob(dataURL) {
-      const arr = dataURL.split(',');
-      const mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) u8arr[n] = bstr.charCodeAt(n);
-      return new Blob([u8arr], {type: mime});
-    }
-
-    async function sendToTelegram(photoData) {
-      try {
-        if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || 
-            TELEGRAM_BOT_TOKEN.includes('YOUR') || TELEGRAM_CHAT_ID.includes('YOUR')) {
-          showNotification('Настройте Telegram API в коде', 'warning');
-          console.error('Telegram bot token или chat_id не установлены.');
-          return false;
-        }
-        
-        const blob = dataURLtoBlob(photoData);
-        const fileName = `photo-${new Date().toISOString()}.jpg`;
-        const file = new File([blob], fileName, { type: 'image/jpeg' });
-        const formData = new FormData();
-        const currentTest = getCurrentTest();
-        
-        formData.append('chat_id', TELEGRAM_CHAT_ID);
-        formData.append('photo', file);
-        formData.append('caption', `Фото-тест от ${new Date().toLocaleDateString()}\nСервис: ${currentTest.service}\nОбъект: ${currentTest.example}`);
-        
-        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-          method: 'POST',
-          body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.ok) {
-          showNotification('Фото успешно отправлено в Telegram!', 'success');
-          updateTestStatus('completed');
-          return true;
+      // Обновляем элементы интерфейса
+      document.getElementById('testExample').textContent = state.currentTest.example;
+      document.getElementById('testService').textContent = state.selectedService;
+      
+      // Обновляем статус
+      const statusBadge = document.getElementById('statusBadge');
+      const serviceData = state.currentTest.services[state.selectedService];
+      
+      if (serviceData.status === 'completed') {
+        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-green-500';
+        statusBadge.innerHTML = '<span class="status-indicator status-completed"></span>Выполнено';
+      } else if (serviceData.status === 'in_progress') {
+        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-yellow-500';
+        statusBadge.innerHTML = '<span class="status-indicator status-in-progress"></span>В процессе';
+      } else if (serviceData.status === 'missed') {
+        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-red-500';
+        statusBadge.innerHTML = '<span class="status-indicator status-missed"></span>Не выполнено';
+      } else {
+        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-blue-500';
+        statusBadge.innerHTML = '<span class="status-indicator status-pending"></span>Назначен';
+      }
+      
+      // Обновляем предварительный просмотр
+      const previewImage = document.getElementById('previewImage');
+      const photoPreview = document.getElementById('photoPreview');
+      
+      if (serviceData.photo) {
+        previewImage.src = serviceData.photo;
+        photoPreview.classList.remove('hidden');
+        if (!serviceData.telegramSent) {
+          document.getElementById('statusText').textContent = 'Отправка в Telegram...';
+          document.getElementById('statusLoader').classList.remove('hidden');
         } else {
-          throw new Error(`Telegram API error: ${result.description}`);
+          document.getElementById('statusText').textContent = 'Успешно!';
+          document.getElementById('statusLoader').classList.add('hidden');
         }
-      } catch (error) {
-        console.error('Ошибка отправки в Telegram:', error);
-        showNotification('Ошибка отправки фото в Telegram', 'error');
-        return false;
+      } else {
+        photoPreview.classList.add('hidden');
+        document.getElementById('statusText').textContent = '';
+        document.getElementById('statusLoader').classList.add('hidden');
       }
-    }
-
-    function updateTestStatus(newStatus) {
-      const tests = JSON.parse(localStorage.getItem('photoTests'));
-      const currentTest = getCurrentTest();
-      const index = tests.findIndex(t => t.date === currentTest.date);
       
-      if (index !== -1) {
-        tests[index].status = newStatus;
-        tests[index].telegramSent = (newStatus === 'completed');
-        localStorage.setItem('photoTests', JSON.stringify(tests));
+      // Обновляем состояние кнопки камеры
+      const cameraButton = document.getElementById('cameraButton');
+      if (isDeadlineMissed(state.currentTest.date) || serviceData.status === 'missed') {
+        cameraButton.disabled = true;
+        cameraButton.classList.add('cursor-not-allowed', 'opacity-50');
+      } else if (serviceData.status === 'in_progress' || serviceData.status === 'pending') {
+        cameraButton.disabled = false;
+        cameraButton.classList.remove('cursor-not-allowed', 'opacity-50');
+      } else {
+        cameraButton.disabled = true;
+        cameraButton.classList.add('cursor-not-allowed', 'opacity-50');
       }
     }
-
+    
     function showNotification(message, type = 'info') {
       const notification = document.getElementById('notification');
+      if (!notification) return;
+      
       notification.textContent = message;
       notification.className = 'notification';
-      
       switch(type) {
         case 'success': notification.classList.add('bg-green-500'); break;
         case 'error': notification.classList.add('bg-red-500'); break;
         case 'warning': notification.classList.add('bg-yellow-500'); break;
         default: notification.classList.add('bg-blue-500');
       }
-      
       notification.classList.add('show');
-      
       setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => { notification.textContent = ''; }, 300);
       }, 5000);
     }
-
-    // Переменная для хранения callback функции подтверждения
-    let confirmationCallback = null;
-
-    // Функции для управления модальным окном
+    
+    // === Функции модальных окон ===
     function showConfirmation(callback) {
       confirmationCallback = callback;
-      document.getElementById('confirmationModal').classList.remove('hidden');
+      const modal = document.getElementById('confirmationModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
     }
-
+    
     function hideConfirmation(confirmed) {
-      document.getElementById('confirmationModal').classList.add('hidden');
-      
+      const modal = document.getElementById('confirmationModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
       if (confirmed && confirmationCallback) {
         confirmationCallback();
       }
-      
       confirmationCallback = null;
     }
-
-    function checkMissedTests() {
-      const now = new Date();
-      const deadline = new Date();
-      deadline.setHours(21, 0, 0, 0);
-      
-      const today = now.toISOString().split('T')[0];
-      const tests = JSON.parse(localStorage.getItem('photoTests')) || [];
-      
-      const missedTests = tests.filter(t => t.date === today && t.status !== 'completed' && !t.missedNotificationSent);
-      
-      if (missedTests.length > 0) {
-        missedTests.forEach(test => {
-          const message = `⚠️ Фотомониторинг не пройден\nДата: ${test.date}\nСервис: ${test.service || 'Не указан'}`;
-          
-          fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              chat_id: TELEGRAM_CHAT_ID,
-              text: message
-            })
-          })
-          .then(() => {
-            test.missedNotificationSent = true;
-          })
-          .catch(error => {
-            console.error('Ошибка отправки уведомления:', error);
-          });
-        });
-        localStorage.setItem('photoTests', JSON.stringify(tests));
-      }
-      
-      // Обновляем статусы устаревших тестов
-      tests.forEach(test => {
-        if (test.status !== 'completed' && isDeadlineMissed(test.date)) {
-          test.status = 'missed';
-        }
-      });
-      localStorage.setItem('photoTests', JSON.stringify(tests));
-    }
-
+    
+    // === Функции выбора сервиса ===
     function confirmService() {
       const select = document.getElementById('serviceSelect');
       const selectedService = select.value;
@@ -389,199 +524,327 @@
         return;
       }
       
-      const tests = JSON.parse(localStorage.getItem('photoTests'));
+      localStorage.setItem('selectedService', selectedService);
+      state.selectedService = selectedService;
+      const now = getLocalServerTime();
       const currentTest = getCurrentTest();
+      currentTest.services[selectedService].status = now > adjustDateWithTime(new Date(now), 21, 0, 0) ? 'missed' : 'in_progress';
+      saveTests();
       
-      // Проверяем дедлайн перед установкой статуса в "в процессе"
-      const now = new Date();
-      const deadline = new Date();
-      deadline.setHours(21, 0, 0, 0);
-      
-      currentTest.service = selectedService;
-      currentTest.status = now > deadline ? 'missed' : 'in_progress';
-      
-      const index = tests.findIndex(t => t.date === currentTest.date);
-      
-      if (index !== -1) {
-        tests[index] = currentTest;
-      } else {
-        tests.push(currentTest);
+      const modal = document.getElementById('serviceModal');
+      if (modal) {
+        modal.classList.add('hidden');
       }
-      
-      localStorage.setItem('photoTests', JSON.stringify(tests));
-      document.getElementById('serviceModal').classList.add('hidden');
-      init();
+      updateUI();
     }
-
-    function init() {
-      // Получаем текущий тест
-      const currentTest = getCurrentTest();
-      
-      // Если сервис не выбран, показываем модальное окно
-      if (!currentTest.service) {
-        document.getElementById('serviceModal').classList.remove('hidden');
-        return;
-      }
-      
-      // Обновляем элементы интерфейса
-      document.getElementById('testExample').textContent = currentTest.example;
-      document.getElementById('testService').textContent = currentTest.service;
-      
-      // Обновляем статус
-      const statusBadge = document.getElementById('statusBadge');
-      
-      if (currentTest.status === 'completed') {
-        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-green-500';
-        statusBadge.textContent = 'Выполнено';
-      } else if (currentTest.status === 'in_progress') {
-        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-yellow-500';
-        statusBadge.textContent = 'В процессе';
-      } else if (currentTest.status === 'missed') {
-        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-red-500';
-        statusBadge.textContent = 'Не выполнено';
-      } else {
-        statusBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-white font-medium bg-blue-500';
-        statusBadge.textContent = 'Назначен';
-      }
-      
-      // Обновляем предварительный просмотр фото
-      const previewImage = document.getElementById('previewImage');
-      const photoPreview = document.getElementById('photoPreview');
-      if (currentTest.photo) {
-        previewImage.src = currentTest.photo;
-        photoPreview.classList.remove('hidden');
-        
-        if (!currentTest.telegramSent) {
-          document.getElementById('statusText').textContent = 'Отправка в Telegram...';
-          document.getElementById('statusLoader').classList.remove('hidden');
-          
-          // Показываем модальное окно перед отправкой
-          showConfirmation(() => {
-            sendToTelegram(currentTest.photo).then(() => {
-              document.getElementById('statusText').textContent = 'Успешно!';
-              document.getElementById('statusLoader').classList.add('hidden');
-            });
-          });
-        } else {
-          document.getElementById('statusText').textContent = 'Успешно!';
-          document.getElementById('statusLoader').classList.add('hidden');
-        }
-      }
-      
-      // Обновляем историю тестов
-      const historyTable = document.getElementById('historyTable');
-      historyTable.innerHTML = '';
-      
-      JSON.parse(localStorage.getItem('photoTests')).slice(-7).forEach(test => {
-        const row = document.createElement('tr');
-        row.className = 'border-b border-gray-200';
-        row.innerHTML = `
-          <td class="px-4 py-3">${test.date}</td>
-          <td class="px-4 py-3">${test.service || '-'}</td>
-          <td class="px-4 py-3">${test.example}</td>
-          <td class="px-4 py-3">
-            <span class="px-2 py-1 rounded text-white text-xs ${
-              test.status === 'completed' ? 'bg-green-500' : 
-              test.status === 'in_progress' ? 'bg-yellow-500' : 
-              test.status === 'missed' ? 'bg-red-500' : 'bg-blue-500'
-            }">
-              ${test.status === 'completed' ? 'Выполнено' : 
-               test.status === 'in_progress' ? 'В процессе' : 
-               test.status === 'missed' ? 'Не выполнено' : 'Назначен'}
-            </span>
-          </td>
-          <td class="px-4 py-3">
-            ${test.photo ? 
-              (test.telegramSent ? 
-                `<img src="${test.photo}" class="h-16 rounded">` : 
-                `<div class="flex items-center">
-                  <img src="${test.photo}" class="h-16 rounded mr-2">
-                  <span class="text-xs bg-blue-500 text-white px-2 py-1 rounded">Отправка...</span>
-                </div>`) : 
-              (test.status === 'missed' ? 'Нет фото' : '-')}
-          </td>
-        `;
-        historyTable.appendChild(row);
-      });
-      
-      // Проверяем пропущенные тесты
-      checkMissedTests();
-      
-      // Добавляем логику для отключения кнопки выбора файла
-      const photoInput = document.getElementById('photoInput');
-      if (photoInput) {
-        // Если статус "Не выполнено" или дедлайн прошёл
-        if (currentTest.status === 'missed' || isDeadlineMissed(currentTest.date)) {
-          photoInput.disabled = true;
-          photoInput.classList.add('cursor-not-allowed', 'opacity-50');
-        } else if (currentTest.status === 'in_progress' || currentTest.status === 'pending') {
-          photoInput.disabled = false;
-          photoInput.classList.remove('cursor-not-allowed', 'opacity-50');
-        } else {
-          photoInput.disabled = false;
-          photoInput.classList.remove('cursor-not-allowed', 'opacity-50');
-        }
-      }
-    }
-
-    function handlePhotoUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const tests = JSON.parse(localStorage.getItem('photoTests'));
-        const today = new Date().toISOString().split('T')[0];
-        const currentTest = tests.find(t => t.date === today);
-        
-        if (currentTest && !isDeadlineMissed(today)) {
-          currentTest.status = 'completed';
-          currentTest.photo = e.target.result;
-          currentTest.telegramSent = false;
-          localStorage.setItem('photoTests', JSON.stringify(tests));
-          init();
-        } else {
-          // Обновляем статус на "Не выполнено" если уже после 21:00
-          if (currentTest && currentTest.status !== 'missed') {
-            currentTest.status = 'missed';
-            localStorage.setItem('photoTests', JSON.stringify(tests));
-          }
-          
-          showNotification('Время для загрузки фото истекло', 'error');
-          init();
-        }
-      };
-      
-      reader.readAsDataURL(file);
-    }
-
+    
     function updateServiceSelection() {
       const serviceSelect = document.getElementById('serviceSelect');
       const confirmBtn = document.getElementById('confirmServiceBtn');
-      
       if (serviceSelect && confirmBtn) {
         confirmBtn.disabled = !serviceSelect.value;
       }
     }
-
-    // Инициализация
+    
+    // === Функции камеры ===
+    async function openCamera() {
+      if (!state.selectedService) {
+        showNotification('Выберите сервис перед использованием камеры', 'warning');
+        return;
+      }
+      
+      try {
+        const currentTest = getCurrentTest();
+        const serviceData = currentTest.services[state.selectedService];
+        
+        if (serviceData.status === 'completed' || isDeadlineMissed(currentTest.date)) {
+          showNotification('Время для загрузки фото истекло', 'error');
+          return;
+        }
+        
+        const cameraContainer = document.getElementById('cameraContainer');
+        const video = document.getElementById('video');
+        
+        if (cameraContainer) {
+          cameraContainer.style.display = 'flex';
+        }
+        
+        // Останавливаем предыдущий поток
+        if (state.mediaStream) {
+          state.mediaStream.getTracks().forEach(track => track.stop());
+        }
+        
+        state.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' }
+        });
+        
+        if (video) {
+          video.srcObject = state.mediaStream;
+          video.play();
+        }
+      } catch (err) {
+        console.error('Ошибка доступа к камере:', err);
+        showNotification('Не удалось получить доступ к камере', 'error');
+        const cameraContainer = document.getElementById('cameraContainer');
+        if (cameraContainer) {
+          cameraContainer.style.display = 'none';
+        }
+      }
+    }
+    
+    function closeCamera() {
+      const cameraContainer = document.getElementById('cameraContainer');
+      if (cameraContainer) {
+        cameraContainer.style.display = 'none';
+      }
+      
+      if (state.mediaStream) {
+        state.mediaStream.getTracks().forEach(track => track.stop());
+        state.mediaStream = null;
+        const video = document.getElementById('video');
+        if (video) {
+          video.srcObject = null;
+        }
+      }
+    }
+    
+    function capturePhoto() {
+      try {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        state.photoDataURL = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Обновляем статус теста
+        state.currentTest.services[state.selectedService].status = 'completed';
+        state.currentTest.services[state.selectedService].photo = state.photoDataURL;
+        closeCamera();
+        showNotification('Фото сделано, отправьте его в Telegram', 'success');
+        updateUI();
+      } catch (error) {
+        console.error('Ошибка при захвате фото:', error);
+        showNotification('Ошибка при захвате фото', 'error');
+      }
+    }
+    
+    // === Дополнительные функции ===
+    function retakePhoto() {
+      if (!state.selectedService || !state.currentTest) return;
+      state.photoDataURL = null;
+      state.currentTest.services[state.selectedService].status = 'in_progress';
+      state.currentTest.services[state.selectedService].photo = null;
+      saveTests();
+      updateUI();
+    }
+    
+    function updateStats() {
+      const stats = {
+        completed: 0,
+        in_progress: 0,
+        missed: 0,
+        total: 0
+      };
+      
+      state.tests.forEach(test => {
+        Object.values(test.services).forEach(service => {
+          if (service.status === 'completed') stats.completed++;
+          else if (service.status === 'in_progress') stats.in_progress++;
+          else if (service.status === 'missed') stats.missed++;
+          stats.total++;
+        });
+      });
+      
+      document.getElementById('statCompleted').textContent = stats.completed;
+      document.getElementById('statMissed').textContent = stats.missed;
+      document.getElementById('statTotal').textContent = stats.total;
+    }
+    
+    // === Функции отправки в Telegram ===
+    async function sendToTelegram(photoData) {
+      try {
+        if (state.isSending) {
+          showNotification('Фото уже отправляется', 'warning');
+          return false;
+        }
+        
+        if (!validateTelegramSettings()) {
+          showNotification('Настройте Telegram API в коде', 'warning');
+          console.error('Telegram bot token или chat_id не установлены.');
+          return false;
+        }
+        
+        if (!photoData) {
+          showNotification('Нет фото для отправки', 'warning');
+          return false;
+        }
+        
+        state.isSending = true;
+        const uploadProgress = document.querySelector('.upload-progress');
+        const uploadProgressBar = document.querySelector('.upload-progress-bar');
+        
+        if (uploadProgress && uploadProgressBar) {
+          uploadProgress.classList.remove('hidden');
+          uploadProgressBar.style.width = '0%';
+          
+          // Прогресс бар для отправки
+          let progress = 0;
+          const progressInterval = setInterval(() => {
+            if (progress < 80) {
+              progress += 5;
+              uploadProgressBar.style.width = `${progress}%`;
+            }
+          }, 100);
+          
+          // Подготовка данных
+          const blob = dataURLtoBlob(photoData);
+          const fileName = `photo-${new Date().toISOString()}.jpg`;
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+          
+          const formData = new FormData();
+          formData.append('chat_id', TELEGRAM_CHAT_ID);
+          formData.append('photo', file);
+          formData.append('caption', `Фото-тест от ${getLocalServerTime().toLocaleDateString()}\nСервис: ${state.selectedService}\nОбъект: ${state.currentTest.example}`);
+          
+          // Отправка
+          const response = await fetch(`https://api.telegram.org/bot ${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+          });
+          
+          clearInterval(progressInterval);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ошибка! статус: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          
+          if (result.ok) {
+            uploadProgressBar.style.width = '100%';
+            setTimeout(() => {
+              if (uploadProgress) uploadProgress.classList.add('hidden');
+            }, 1000);
+            
+            showNotification('Фото успешно отправлено в Telegram!', 'success');
+            state.currentTest.services[state.selectedService].telegramSent = true;
+            saveTests();
+            state.isSending = false;
+            return true;
+          } else {
+            throw new Error(`Ошибка Telegram API: ${result.description || 'Неизвестная ошибка'}`);
+          }
+        } else {
+          // Если нет элементов прогресс-бара
+          showNotification('Фото успешно отправлено в Telegram!', 'success');
+          state.currentTest.services[state.selectedService].telegramSent = true;
+          saveTests();
+          state.isSending = false;
+          return true;
+        }
+      } catch (error) {
+        console.error('Ошибка отправки в Telegram:', error);
+        showNotification('Ошибка отправки фото в Telegram', 'error');
+        const retryButton = document.getElementById('retryButton');
+        if (retryButton) {
+          retryButton.classList.remove('hidden');
+        }
+        state.isSending = false;
+        return false;
+      }
+    }
+    
+    function dataURLtoBlob(dataURL) {
+      try {
+        const arr = dataURL.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+        return new Blob([u8arr], { type: mime });
+      } catch (error) {
+        console.error('Ошибка преобразования dataURL в blob:', error);
+        return null;
+      }
+    }
+    
+    // === Основная логика ===
+    async function init() {
+      try {
+        state.tests = loadTests();
+        state.currentTest = getCurrentTest();
+        const selectedService = localStorage.getItem('selectedService');
+        
+        if (!selectedService) {
+          const modal = document.getElementById('serviceModal');
+          if (modal) {
+            modal.classList.remove('hidden');
+          }
+        } else {
+          state.selectedService = selectedService;
+          updateUI();
+        }
+      } catch (error) {
+        console.error('Критическая ошибка инициализации:', error);
+        showNotification('Ошибка инициализации приложения', 'error');
+      }
+    }
+    
+    function setupEventListeners() {
+      const cameraButton = document.getElementById('cameraButton');
+      if (cameraButton) {
+        cameraButton.addEventListener('click', () => {
+          if (!state.selectedService) {
+            showNotification('Выберите сервис перед использованием камеры', 'warning');
+          } else if (state.photoDataURL) {
+            handlePhotoSend();
+          }
+        });
+      }
+      
+      document.addEventListener('keydown', (e) => {
+        const cameraContainer = document.getElementById('cameraContainer');
+        if (e.key === 'Escape' && cameraContainer && cameraContainer.style.display === 'flex') {
+          closeCamera();
+        }
+      });
+    }
+    
+    function handlePhotoSend() {
+      if (!state.photoDataURL) {
+        showNotification('Сначала сделайте фото', 'warning');
+        return;
+      }
+      
+      showConfirmation(async () => {
+        const success = await sendToTelegram(state.photoDataURL);
+        if (success) {
+          document.getElementById('statusText').textContent = 'Успешно!';
+          document.getElementById('statusLoader').classList.add('hidden');
+          document.getElementById('retryButton').classList.add('hidden');
+          state.photoDataURL = null;
+        }
+      });
+    }
+    
+    // === Обработчики событий ===
     document.addEventListener('DOMContentLoaded', () => {
-      // Обработчик изменения выбора сервиса
       const serviceSelect = document.getElementById('serviceSelect');
       const confirmBtn = document.getElementById('confirmServiceBtn');
       
       if (serviceSelect && confirmBtn) {
-        serviceSelect.addEventListener('change', () => {
-          updateServiceSelection();
-        });
-        updateServiceSelection(); // Инициализируем начальное состояние кнопки
+        serviceSelect.addEventListener('change', updateServiceSelection);
+        updateServiceSelection();
       }
-      
-      // Инициализация при загрузке страницы
-      window.addEventListener('load', () => {
-        checkMissedTests();
-        init();
-      });
+    });
+    
+    window.addEventListener('load', () => {
+      init();
+      setupEventListeners();
     });
   </script>
 </body>
